@@ -6,23 +6,31 @@
     "lighter-type": ">=0.0.2"
   },
   "devDependencies": {
-    "exam": ">=0.3.5"
+    "exam": ">=1.1.1 <2",
+    "lru-cache": "^2.7.0",
+    "simple-lru-cache": "0.0.2"
   },
+  "bundledDependencies": [],
   "keywords": [
+    "utility",
     "lighter",
     "fast",
     "lightweight",
-    "minimal"
+    "minimal",
+    "benchmark",
+    "speed",
+    "ops"
   ],
   "main": "lighter-lru-cache.js",
   "engines": {
-    "node": ">=0.2.6"
+    "node": ">=0.8.28"
   },
   "scripts": {
     "test": "./node_modules/exam/exam.js",
     "cover": "./node_modules/exam/exam-cover.js",
     "report": "open coverage/lcov-report/index.html",
-    "coveralls": "./node_modules/exam/exam-coveralls.js"
+    "coveralls": "./node_modules/exam/exam-coveralls.js",
+    "bench": "./node_modules/exam/exam.js test/bench"
   },
   "repository": "https://github.com/lighterio/lighter-lru-cache.git",
   "bugs": "https://github.com/lighterio/lighter-lru-cache/issues",
@@ -31,5 +39,5 @@
   "contributors": [
     "Sam Eubank <sameubank@gmail.com>"
   ],
-  "license": "MIT"
+  "license": "ISC"
 }

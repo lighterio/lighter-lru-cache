@@ -1,44 +1,33 @@
+'use strict'
+var Type = require('lighter-type')
+
 /**
  * Fast LRU Cache, implemented with a doubly-linked loop.
  */
-
-var Type = require('lighter-type')
-module.exports = Type.extend({
+var LruCache = module.exports = Type.extend({
 
   /**
    * Create a Cache object based on options.
    */
   init: function (options) {
-    if (typeof options === 'number') {
-      options = {maxSize: options}
+    if (options) {
+      this.max = options.max || Infinity
+    } else {
+      options = new this.Options()
+      this.max = options.max
     }
-    options = options || {}
-    this.maxSize = options.maxSize || 1e6
-    this.clear()
+    this.length = options.length
+    this.reset()
   },
 
   /**
-   * Clear the map and close the loop.
+   * Clear the cache.
    */
-  clear: function () {
+  reset: function () {
     this.size = 0
     this.map = {}
-    this._next = this
-    this._prev = this
-  },
-
-  /**
-   * Get a value from the map by its key, and treat it as being used.
-   */
-  get: function (key) {
-    var item = this.map[key]
-    if (item) {
-      if (item !== this._next) {
-        item.unlink()
-        item.link(this)
-      }
-      return item.value
-    }
+    this.next = this
+    this.prev = this
   },
 
   /**
@@ -48,24 +37,45 @@ module.exports = Type.extend({
     var item = this.map[key]
     if (item) {
       item.value = value
-      if (item !== this._next) {
-        item.unlink()
-        item.link(this)
+      if (item !== this.next) {
+        item.relink(this)
       }
     } else {
-
       // Create an item and add it to the head of the loop.
-      item = this.map[key] = new Item(key, value)
+      item = this.map[key] = new this.Item(key, value)
       item.link(this)
 
       // Remove the tail if necessary.
-      if (this.size < this.maxSize) {
-        this.size++
+      if (this.size < this.max) {
+        this.size += (this.length ? this.length(item) : 1)
       } else {
-        var tail = this._prev
+        var tail = this.prev
         tail.unlink()
         delete this.map[tail.key]
       }
+    }
+  },
+
+  /**
+   * Get a value from the map by its key, and treat it as being used.
+   */
+  get: function (key) {
+    var item = this.map[key]
+    if (item) {
+      if (item !== this.next) {
+        item.relink(this)
+      }
+      return item.value
+    }
+  },
+
+  /**
+   * Get a value by its key, but don't treat it as being used.
+   */
+  peek: function (key) {
+    var item = this.map[key]
+    if (item) {
+      return item.value
     }
   },
 
@@ -75,33 +85,23 @@ module.exports = Type.extend({
   remove: function (key) {
     var item = this.map[key]
     if (item) {
-      var prev = item._prev
-      var next = item._next
-      prev._next = next
-      next._prev = prev
+      var prev = item.prev
+      var next = item.next
+      prev.next = next
+      next.prev = prev
       delete this.map[key]
+      this.size -= (this.length ? this.length(item) : 1)
     }
   },
 
   /**
    * Iterate over the key/value pairs in the loop.
    */
-  each: function (fn) {
-    var item = this._next
-    while (item !== this) {
-      fn(item.key, item.value)
-      item = item._next
-    }
-  },
-
-  /**
-   * Iterate over the value/key pairs in the loop.
-   */
   forEach: function (fn) {
-    var item = this._next
+    var item = this.next
     while (item !== this) {
-      fn(item.value, item.key)
-      item = item._next
+      fn(item.value, item.key, this)
+      item = item.next
     }
   },
 
@@ -110,10 +110,10 @@ module.exports = Type.extend({
    */
   getMap: function () {
     var map = {}
-    var item = this._next
+    var item = this.next
     while (item !== this) {
       map[item.key] = item.value
-      item = item._next
+      item = item.next
     }
     return map
   },
@@ -122,12 +122,12 @@ module.exports = Type.extend({
    * Return an array of keys in order of time since used.
    */
   getKeys: function () {
-    var keys = new Array(this.size)
+    var keys = []
     var index = 0
-    var item = this._next
+    var item = this.next
     while (item !== this) {
       keys[index++] = item.key
-      item = item._next
+      item = item.next
     }
     return keys
   },
@@ -136,12 +136,12 @@ module.exports = Type.extend({
    * Return an array of values in order of time since used.
    */
   getValues: function () {
-    var values = new Array(this.size)
+    var values = []
     var index = 0
-    var item = this._next
+    var item = this.next
     while (item !== this) {
       values[index++] = item.value
-      item = item._next
+      item = item.next
     }
     return values
   },
@@ -150,49 +150,71 @@ module.exports = Type.extend({
    * Return an array of items in order of time since used.
    */
   getItems: function () {
-    var items = new Array(this.size)
+    var items = []
     var index = 0
-    var item = this._next
+    var item = this.next
     while (item !== this) {
       items[index++] = item
-      item = item._next
+      item = item.next
     }
     return items
-  }
-
-})
-
-/**
- * Create a new cache item.
- */
-function Item (key, value) {
-  this.key = key
-  this.value = value
-  this._prev = null
-  this._next = null
-}
-
-Item.prototype = {
-
-  /**
-   * Detach this item from the doubly-linked loop.
-   */
-  unlink: function () {
-    var prev = this._prev
-    var next = this._next
-    prev._next = next
-    next._prev = prev
   },
 
-  /**
-   * Link this item after another.
-   */
-  link: function (prev) {
-    var next = prev._next
-    this._prev = prev
-    this._next = next
-    prev._next = this
-    next._prev = this
-  }
+  Options: Type.extend({
+    init: function () {},
+    max: Infinity
+  }),
 
-}
+  Item: Type.extend({
+
+    /**
+     * Create a new cache item.
+     */
+    init: function Item (key, value) {
+      this.key = key
+      this.value = value
+      this.prev = null
+      this.next = null
+    },
+
+    /**
+     * Unlink this item from the doubly-linked loop.
+     */
+    unlink: function () {
+      var prev = this.prev
+      var next = this.next
+      prev.next = next
+      next.prev = prev
+    },
+
+    /**
+     * Link this after another item.
+     */
+    link: function (item) {
+      var next = item.next
+      this.prev = item
+      this.next = next
+      item.next = this
+      next.prev = this
+    },
+
+    /**
+     * Unlink from the loop, and link after another item.
+     */
+    relink: function (item) {
+      var prev = this.prev
+      var next = this.next
+      prev.next = next
+      next.prev = prev
+      next = item.next
+      this.prev = item
+      this.next = next
+      item.next = this
+      next.prev = this
+    }
+  })
+})
+
+var proto = LruCache.prototype
+proto.del = proto.remove
+proto.dump = proto.getItems
