@@ -1,6 +1,6 @@
 'use strict'
 /* global describe it */
-var is = global.is || require('exam/lib/is')
+var is = global.is || require('exam-is')
 var LruCache = require('../lighter-lru-cache')
 
 describe('LruCache', function () {
@@ -22,5 +22,11 @@ describe('LruCache', function () {
     is.undefined(a)
     is(b, 2)
     is(c, 3)
+  })
+
+  it('works without a max option', function () {
+    var cache = new LruCache({})
+    is.object(cache)
+    is(cache.max, Infinity)
   })
 })

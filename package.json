@@ -1,13 +1,15 @@
 {
   "name": "lighter-lru-cache",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A lightweight JavaScript LRU cache.",
   "dependencies": {
-    "lighter-type": ">=0.0.2"
+    "lighter-type": ">=0.0.2",
+    "lru-cache": "^2.7.0",
+    "simple-lru-cache": "0.0.2"
   },
   "devDependencies": {
-    "exam": ">=1.1.1 <2",
-    "lru-cache": "^2.7.0",
+    "exam": ">=1.4.3 <2",
+    "lru-cache": "2.7.0",
     "simple-lru-cache": "0.0.2"
   },
   "bundledDependencies": [],

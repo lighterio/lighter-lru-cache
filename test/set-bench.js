@@ -1,11 +1,11 @@
 'use strict'
-/* global bench it */
+/* global bench it is */
 var packages = require('./.bench-packages')
 
 bench('Setting 100 items', function () {
   packages.forEach(function (name, Cache) {
+    var cache = new Cache()
     it(name, function () {
-      var cache = new Cache()
       cache.set('v0', 0)
       cache.set('v1', 1)
       cache.set('v2', 2)

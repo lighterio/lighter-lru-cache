@@ -1,6 +1,6 @@
 'use strict'
 /* global describe it */
-var is = global.is || require('exam/lib/is')
+var is = global.is || require('exam-is')
 var LruCache = require('../lighter-lru-cache')
 
 describe('LruCache.prototype.reset', function () {

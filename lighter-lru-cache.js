@@ -36,7 +36,13 @@ var LruCache = module.exports = Type.extend({
   set: function (key, value) {
     var item = this.map[key]
     if (item) {
+      if (this.length) {
+        this.size -= this.length(item)
+      }
       item.value = value
+      if (this.length) {
+        this.size += this.length(item)
+      }
       if (item !== this.next) {
         item.relink(this)
       }
@@ -44,15 +50,14 @@ var LruCache = module.exports = Type.extend({
       // Create an item and add it to the head of the loop.
       item = this.map[key] = new this.Item(key, value)
       item.link(this)
-
-      // Remove the tail if necessary.
-      if (this.size < this.max) {
-        this.size += (this.length ? this.length(item) : 1)
-      } else {
-        var tail = this.prev
-        tail.unlink()
-        delete this.map[tail.key]
-      }
+      this.size += (this.length ? this.length(item) : 1)
+    }
+    // Remove the tail if necessary.
+    while (this.size > this.max) {
+      var tail = this.prev
+      tail.unlink()
+      delete this.map[tail.key]
+      this.size -= (this.length ? this.length(tail) : 1)
     }
   },
 
