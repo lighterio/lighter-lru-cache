@@ -4,21 +4,16 @@ var Type = require('lighter-type')
 /**
  * Fast LRU Cache, implemented with a doubly-linked loop.
  */
-var LruCache = module.exports = Type.extend({
-
-  /**
-   * Create a Cache object based on options.
-   */
-  init: function (options) {
-    if (options) {
-      this.max = options.max || Infinity
-    } else {
-      options = new this.Options()
-      this.max = options.max
-    }
-    this.length = options.length
-    this.reset()
-  },
+var Cache = module.exports = Type.extend(function Cache (options) {
+  if (options) {
+    this.max = options.max || Infinity
+  } else {
+    options = new this.Options()
+    this.max = options.max
+  }
+  this.length = options.length
+  this.reset()
+}, {
 
   /**
    * Clear the cache.
@@ -165,22 +160,24 @@ var LruCache = module.exports = Type.extend({
     return items
   },
 
-  Options: Type.extend({
-    init: function () {},
+  /**
+   * Create an options object for a cache.
+   */
+  Options: Type.extend(function Options () {}, {
     max: Infinity
   }),
 
-  Item: Type.extend({
-
-    /**
-     * Create a new cache item.
-     */
-    init: function Item (key, value) {
-      this.key = key
-      this.value = value
-      this.prev = null
-      this.next = null
-    },
+  /**
+   * Create an item to store in a cache.
+   * @param  {key}   key  Key by which to store the item.
+   * @return {value}      Value for the item.
+   */
+  Item: Type.extend(function Item (key, value) {
+    this.key = key
+    this.value = value
+    this.prev = null
+    this.next = null
+  }, {
 
     /**
      * Unlink this item from the doubly-linked loop.
@@ -220,6 +217,19 @@ var LruCache = module.exports = Type.extend({
   })
 })
 
-var proto = LruCache.prototype
+/**
+ * Export a shared cache for the whole process.
+ */
+var name = '_lighterSharedLruCache'
+if (!process[name]) {
+  Object.defineProperty(process, name, {
+    enumerable: false,
+    value: new Cache()
+  })
+}
+Cache.shared = process[name]
+
+// Be compatibile with some other cache APIs.
+var proto = Cache.prototype
 proto.del = proto.remove
 proto.dump = proto.getItems
