@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/npm/v/lighter-lru-cache.svg)](//www.npmjs.com/package/lighter-lru-cache)
 [![Downloads](https://img.shields.io/npm/dm/lighter-lru-cache.svg)](//www.npmjs.com/package/lighter-lru-cache)
 [![Build](https://img.shields.io/travis/lighterio/lighter-lru-cache.svg)](//travis-ci.org/lighterio/lighter-lru-cache)
-[![Coverage](https://img.shields.io/coveralls/lighterio/lighter-lru-cache/master.svg)](//coveralls.io/r/lighterio/lighter-lru-cache)
+[![Coverage](https://img.shields.io/codecov/c/github/lighterio/lighter-lru-cache/master.svg)](//codecov.io/gh/lighterio/lighter-lru-cache)
 [![Style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](//www.npmjs.com/package/standard)
 
 The `lighter-lru-cache` module is a lightweight LRU cache.
